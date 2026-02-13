@@ -3,128 +3,93 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard</title>
+<title>Push Admin</title>
 
-<style>
-body{
-    font-family:Arial;
-    background:#020617;
-    color:white;
-    margin:0;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    min-height:100vh;
-}
+<!-- Tailwind CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
 
-.container{
-    width:100%;
-    max-width:420px;
-    padding:15px;
-}
-
-.previewBox{
-    background:#0f172a;
-    border-radius:14px;
-    overflow:hidden;
-    margin-bottom:20px;
-    box-shadow:0 0 20px rgba(0,0,0,.6);
-}
-
-.previewImg{
-    width:100%;
-    display:none;
-}
-
-.previewContent{
-    padding:15px;
-}
-
-.previewTitle{
-    font-size:18px;
-    font-weight:bold;
-}
-
-.previewBody{
-    font-size:14px;
-    color:#cbd5e1;
-}
-
-.panel{
-    background:#1e293b;
-    padding:20px;
-    border-radius:14px;
-}
-
-input,button{
-    width:100%;
-    padding:12px;
-    margin-bottom:12px;
-    border-radius:8px;
-    border:none;
-    font-size:15px;
-}
-
-button{
-    background:#22c55e;
-    cursor:pointer;
-}
-
-.mode{
-    display:flex;
-    gap:10px;
-    margin-bottom:10px;
-}
-
-.mode button{
-    flex:1;
-    background:#334155;
-}
-
-.mode button.active{
-    background:#38bdf8;
-}
-
-.success{
-    color:#4ade80;
-    text-align:center;
-}
-</style>
 </head>
 
-<body>
+<body class="bg-slate-950 text-white flex justify-center items-center min-h-screen">
 
-<div class="container">
+<div class="w-full max-w-md p-4">
 
-<!-- LIVE PREVIEW -->
-<div class="previewBox">
-<img id="previewImg" class="previewImg">
-<div class="previewContent">
-<div class="previewTitle" id="pTitle">Notification Title</div>
-<div class="previewBody" id="pBody">Notification message preview here...</div>
+<!-- PREVIEW CARD -->
+<div class="bg-slate-900 rounded-2xl shadow-2xl overflow-hidden mb-6">
+
+<div id="previewImageContainer" class="hidden">
+<img id="previewImg" class="w-full h-48 object-cover">
 </div>
+
+<div class="p-4 flex gap-3 items-start">
+<img id="previewIcon" class="w-10 h-10 rounded-full hidden">
+<div>
+<h3 id="pTitle" class="font-bold text-lg">Notification Title</h3>
+<p id="pBody" class="text-sm text-slate-300">Notification message preview here...</p>
+</div>
+</div>
+
 </div>
 
 <!-- CONTROL PANEL -->
-<div class="panel">
+<div class="bg-slate-800 p-6 rounded-2xl shadow-xl space-y-3">
 
-<input id="title" placeholder="Notification Title" oninput="updatePreview()">
-<input id="body" placeholder="Notification Message" oninput="updatePreview()">
+<h2 class="text-xl font-bold text-center mb-2">Admin Push Center</h2>
 
-<div class="mode">
-<button id="btnUpload" class="active" onclick="setMode('upload')">Upload Image</button>
-<button id="btnUrl" onclick="setMode('url')">Use Image URL</button>
+<input id="title" placeholder="Notification Title"
+class="w-full p-3 rounded-lg bg-slate-700 outline-none"
+oninput="updatePreview()">
+
+<input id="body" placeholder="Notification Message"
+class="w-full p-3 rounded-lg bg-slate-700 outline-none"
+oninput="updatePreview()">
+
+<!-- IMAGE SECTION -->
+<div>
+<p class="text-sm mb-1 text-slate-400">Big Image</p>
+
+<select id="imageMode" onchange="toggleImageMode()"
+class="w-full p-2 mb-2 rounded bg-slate-700">
+<option value="upload">Upload Image</option>
+<option value="url">Use Image URL</option>
+</select>
+
+<input type="file" id="uploadImage" accept="image/*"
+class="w-full mb-2">
+
+<input id="imageUrl" placeholder="Paste Image URL"
+class="w-full p-3 rounded-lg bg-slate-700 hidden">
+
+<button onclick="handleImage()"
+class="w-full bg-blue-600 p-2 rounded-lg">Apply Image</button>
 </div>
 
-<input type="file" id="upload" accept="image/*">
-<input id="imgUrl" placeholder="Paste Image URL" style="display:none">
+<!-- ICON SECTION -->
+<div>
+<p class="text-sm mb-1 text-slate-400">Small Icon</p>
 
-<input id="icon" placeholder="Small Icon URL (optional)">
+<select id="iconMode" onchange="toggleIconMode()"
+class="w-full p-2 mb-2 rounded bg-slate-700">
+<option value="upload">Upload Icon</option>
+<option value="url">Use Icon URL</option>
+</select>
 
-<button onclick="uploadImage()">Upload Image</button>
-<button onclick="send()">Send Notification</button>
+<input type="file" id="uploadIcon" accept="image/*"
+class="w-full mb-2">
 
-<div class="success" id="done"></div>
+<input id="iconUrl" placeholder="Paste Icon URL"
+class="w-full p-3 rounded-lg bg-slate-700 hidden">
+
+<button onclick="handleIcon()"
+class="w-full bg-purple-600 p-2 rounded-lg">Apply Icon</button>
+</div>
+
+<button onclick="send()"
+class="w-full bg-green-600 p-3 rounded-xl font-semibold">
+Send Notification
+</button>
+
+<p id="done" class="text-green-400 text-center mt-2"></p>
 
 </div>
 </div>
@@ -134,59 +99,80 @@ const CLOUD_NAME = "dimnhchh8";
 const UPLOAD_PRESET = "push_images";
 
 let uploadedImageURL = "";
-let mode = "upload";
+let uploadedIconURL = "";
 
-function setMode(type){
-  mode = type;
-  btnUpload.classList.remove("active");
-  btnUrl.classList.remove("active");
-
-  if(type==="upload"){
-    btnUpload.classList.add("active");
-    upload.style.display="block";
-    imgUrl.style.display="none";
-  }else{
-    btnUrl.classList.add("active");
-    upload.style.display="none";
-    imgUrl.style.display="block";
-  }
-}
-
+/* PREVIEW UPDATE */
 function updatePreview(){
   pTitle.innerText = title.value || "Notification Title";
   pBody.innerText = body.value || "Notification message preview here...";
 }
 
-async function uploadImage(){
-  if(mode==="url"){
-    uploadedImageURL = imgUrl.value;
-    showPreview(uploadedImageURL);
-    return;
+/* IMAGE MODE */
+function toggleImageMode(){
+  if(imageMode.value==="upload"){
+    uploadImage.classList.remove("hidden");
+    imageUrl.classList.add("hidden");
+  }else{
+    uploadImage.classList.add("hidden");
+    imageUrl.classList.remove("hidden");
   }
+}
 
-  const file = upload.files[0];
-  if(!file) return alert("Select image first!");
+/* ICON MODE */
+function toggleIconMode(){
+  if(iconMode.value==="upload"){
+    uploadIcon.classList.remove("hidden");
+    iconUrl.classList.add("hidden");
+  }else{
+    uploadIcon.classList.add("hidden");
+    iconUrl.classList.remove("hidden");
+  }
+}
 
+/* UPLOAD TO CLOUDINARY */
+async function uploadToCloudinary(file){
   const form = new FormData();
-  form.append("file",file);
-  form.append("upload_preset",UPLOAD_PRESET);
+  form.append("file", file);
+  form.append("upload_preset", UPLOAD_PRESET);
 
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,{
-    method:"POST",
-    body:form
-  });
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+    { method:"POST", body:form }
+  );
 
   const data = await res.json();
-  uploadedImageURL = data.secure_url;
-
-  showPreview(uploadedImageURL);
+  return data.secure_url;
 }
 
-function showPreview(url){
-  previewImg.src = url;
-  previewImg.style.display="block";
+/* HANDLE IMAGE */
+async function handleImage(){
+  if(imageMode.value==="url"){
+    uploadedImageURL = imageUrl.value;
+  }else{
+    const file = uploadImage.files[0];
+    if(!file) return alert("Select image first");
+    uploadedImageURL = await uploadToCloudinary(file);
+  }
+
+  previewImg.src = uploadedImageURL;
+  previewImageContainer.classList.remove("hidden");
 }
 
+/* HANDLE ICON */
+async function handleIcon(){
+  if(iconMode.value==="url"){
+    uploadedIconURL = iconUrl.value;
+  }else{
+    const file = uploadIcon.files[0];
+    if(!file) return alert("Select icon first");
+    uploadedIconURL = await uploadToCloudinary(file);
+  }
+
+  previewIcon.src = uploadedIconURL;
+  previewIcon.classList.remove("hidden");
+}
+
+/* SEND PUSH */
 async function send(){
   await fetch("https://push-notification-system-chof.onrender.com/send",{
     method:"POST",
@@ -195,7 +181,7 @@ async function send(){
       title:title.value,
       body:body.value,
       image:uploadedImageURL,
-      icon:icon.value
+      icon:uploadedIconURL
     })
   });
 
