@@ -70,7 +70,7 @@
 
     <script>
         async function send() {
-            await fetch("https://push-notification-system-chof.onrender.com", {
+            await fetch("https://push-notification-system-chof.onrender.com/send", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -91,3 +91,4 @@
 
 
 </html>
+
