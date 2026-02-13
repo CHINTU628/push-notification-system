@@ -1,94 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Admin Dashboard</title>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #020617;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .panel {
-            background: #1e293b;
-            padding: 40px;
-            border-radius: 12px;
-            width: 350px;
-            box-shadow: 0 0 25px rgba(0, 0, 0, .6);
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            border: none;
-            font-size: 15px;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #22c55e;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #16a34a;
-        }
-
-        .success {
-            margin-top: 10px;
-            color: #4ade80;
-        }
-    </style>
+<style>
+body{
+    font-family: Arial;
+    background:#020617;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+.panel{
+    background:#1e293b;
+    padding:40px;
+    border-radius:12px;
+    width:360px;
+}
+input,button{
+    width:100%;
+    padding:10px;
+    margin-bottom:12px;
+    border-radius:6px;
+    border:none;
+}
+button{
+    background:#22c55e;
+    font-size:16px;
+    cursor:pointer;
+}
+.preview{
+    width:100%;
+    border-radius:8px;
+    display:none;
+    margin-bottom:10px;
+}
+.success{
+    color:#4ade80;
+}
+</style>
 </head>
 
 <body>
 
-    <div class="panel">
-        <h2>Admin Push Center</h2>
-        <input id="title" placeholder="Notification Title">
-        <input id="body" placeholder="Notification Message">
-        <input id="img" placeholder="Big Image URL (https://...)">
-        <input id="icon" placeholder="Small Icon URL (https://...)">
-        <button onclick="send()">Send Notification</button>
+<div class="panel">
+<h2>Admin Push Center</h2>
 
+<input id="title" placeholder="Notification Title">
+<input id="body" placeholder="Notification Message">
 
-        <div class="success" id="done"></div>
-    </div>
+<input type="file" id="upload" accept="image/*">
 
-    <script>
-        async function send() {
-            await fetch("https://push-notification-system-chof.onrender.com/send", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    title: title.value,
-                    body: body.value,
-                    image: img.value,
-                    icon: icon.value
-                })
-            });
+<img id="preview" class="preview">
 
-            document.getElementById("done").innerText = "Sent Successfully ✔";
-        }
-    </script>
+<input id="icon" placeholder="Small Icon URL (https://...)">
 
+<button onclick="uploadImage()">Upload Image</button>
+<button onclick="send()">Send Notification</button>
 
+<div class="success" id="done"></div>
+</div>
+
+<script>
+const CLOUD_NAME = "dimnhchh8";
+const UPLOAD_PRESET = "push_images";
+
+let uploadedImageURL = "";
+
+async function uploadImage(){
+  const file = document.getElementById("upload").files[0];
+  if(!file) return alert("Select image first!");
+
+  const form = new FormData();
+  form.append("file", file);
+  form.append("upload_preset", UPLOAD_PRESET);
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,{
+    method:"POST",
+    body:form
+  });
+
+  const data = await res.json();
+
+  uploadedImageURL = data.secure_url;
+
+  document.getElementById("preview").src = uploadedImageURL;
+  document.getElementById("preview").style.display="block";
+
+  alert("Image uploaded successfully!");
+}
+
+async function send(){
+  await fetch("https://push-notification-system-chof.onrender.com/send",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      title:title.value,
+      body:body.value,
+      image:uploadedImageURL,
+      icon:icon.value
+    })
+  });
+
+  document.getElementById("done").innerText="Sent Successfully ✔";
+}
+</script>
 
 </body>
-
-
 </html>
-
