@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>User Notifications</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#0f172a;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.card{
+    background:#1e293b;
+    padding:40px;
+    border-radius:12px;
+    text-align:center;
+    width:320px;
+    box-shadow:0 0 20px rgba(0,0,0,.5);
+}
+
+button{
+    background:#38bdf8;
+    border:none;
+    padding:12px 20px;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#0ea5e9;
+}
+
+.status{
+    margin-top:15px;
+    font-size:14px;
+    color:#22c55e;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h2>User Notification Panel</h2>
+    <p>Enable updates from website</p>
+    <button onclick="enable()">Enable Notifications</button>
+    <div class="status" id="status"></div>
+</div>
+
+<script>
+let reg;
+navigator.serviceWorker.register("sw.js").then(r=>reg=r);
+
+async function enable(){
+    const permission = await Notification.requestPermission();
+    if(permission !== "granted"){
+        alert("Permission denied");
+        return;
+    }
+
+    const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:
+        "BCOoyQwrS38OAc6WtHy3nY30NTnpTrVd3etHnz6TAjx9nqi9EEvLY9VrurotjYImerLpK5t58I5o3RbYQgqUZlw"
+    });
+
+    await fetch("http://localhost:3000/subscribe",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify(subscription)
+    });
+
+    document.getElementById("status").innerText = "Notifications Enabled ✔";
+}
+</script>
+
+</body>
+</html>
