@@ -71,7 +71,7 @@ async function enable(){
         "BCOoyQwrS38OAc6WtHy3nY30NTnpTrVd3etHnz6TAjx9nqi9EEvLY9VrurotjYImerLpK5t58I5o3RbYQgqUZlw"
     });
 
-    await fetch("http://localhost:3000/subscribe",{
+    await fetch("https://push-notification-system-chof.onrender.com",{
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body:JSON.stringify(subscription)
@@ -83,3 +83,4 @@ async function enable(){
 
 </body>
 </html>
+
