@@ -2,66 +2,131 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard</title>
 
 <style>
 body{
-    font-family: Arial;
+    font-family:Arial;
     background:#020617;
     color:white;
+    margin:0;
     display:flex;
     justify-content:center;
     align-items:center;
-    height:100vh;
+    min-height:100vh;
 }
+
+.container{
+    width:100%;
+    max-width:420px;
+    padding:15px;
+}
+
+.previewBox{
+    background:#0f172a;
+    border-radius:14px;
+    overflow:hidden;
+    margin-bottom:20px;
+    box-shadow:0 0 20px rgba(0,0,0,.6);
+}
+
+.previewImg{
+    width:100%;
+    display:none;
+}
+
+.previewContent{
+    padding:15px;
+}
+
+.previewTitle{
+    font-size:18px;
+    font-weight:bold;
+}
+
+.previewBody{
+    font-size:14px;
+    color:#cbd5e1;
+}
+
 .panel{
     background:#1e293b;
-    padding:40px;
-    border-radius:12px;
-    width:360px;
+    padding:20px;
+    border-radius:14px;
 }
+
 input,button{
     width:100%;
-    padding:10px;
+    padding:12px;
     margin-bottom:12px;
-    border-radius:6px;
+    border-radius:8px;
     border:none;
+    font-size:15px;
 }
+
 button{
     background:#22c55e;
-    font-size:16px;
     cursor:pointer;
 }
-.preview{
-    width:100%;
-    border-radius:8px;
-    display:none;
+
+.mode{
+    display:flex;
+    gap:10px;
     margin-bottom:10px;
 }
+
+.mode button{
+    flex:1;
+    background:#334155;
+}
+
+.mode button.active{
+    background:#38bdf8;
+}
+
 .success{
     color:#4ade80;
+    text-align:center;
 }
 </style>
 </head>
 
 <body>
 
-<div class="panel">
-<h2>Admin Push Center</h2>
+<div class="container">
 
-<input id="title" placeholder="Notification Title">
-<input id="body" placeholder="Notification Message">
+<!-- LIVE PREVIEW -->
+<div class="previewBox">
+<img id="previewImg" class="previewImg">
+<div class="previewContent">
+<div class="previewTitle" id="pTitle">Notification Title</div>
+<div class="previewBody" id="pBody">Notification message preview here...</div>
+</div>
+</div>
+
+<!-- CONTROL PANEL -->
+<div class="panel">
+
+<input id="title" placeholder="Notification Title" oninput="updatePreview()">
+<input id="body" placeholder="Notification Message" oninput="updatePreview()">
+
+<div class="mode">
+<button id="btnUpload" class="active" onclick="setMode('upload')">Upload Image</button>
+<button id="btnUrl" onclick="setMode('url')">Use Image URL</button>
+</div>
 
 <input type="file" id="upload" accept="image/*">
+<input id="imgUrl" placeholder="Paste Image URL" style="display:none">
 
-<img id="preview" class="preview">
-
-<input id="icon" placeholder="Small Icon URL (https://...)">
+<input id="icon" placeholder="Small Icon URL (optional)">
 
 <button onclick="uploadImage()">Upload Image</button>
 <button onclick="send()">Send Notification</button>
 
 <div class="success" id="done"></div>
+
+</div>
 </div>
 
 <script>
@@ -69,14 +134,42 @@ const CLOUD_NAME = "dimnhchh8";
 const UPLOAD_PRESET = "push_images";
 
 let uploadedImageURL = "";
+let mode = "upload";
+
+function setMode(type){
+  mode = type;
+  btnUpload.classList.remove("active");
+  btnUrl.classList.remove("active");
+
+  if(type==="upload"){
+    btnUpload.classList.add("active");
+    upload.style.display="block";
+    imgUrl.style.display="none";
+  }else{
+    btnUrl.classList.add("active");
+    upload.style.display="none";
+    imgUrl.style.display="block";
+  }
+}
+
+function updatePreview(){
+  pTitle.innerText = title.value || "Notification Title";
+  pBody.innerText = body.value || "Notification message preview here...";
+}
 
 async function uploadImage(){
-  const file = document.getElementById("upload").files[0];
+  if(mode==="url"){
+    uploadedImageURL = imgUrl.value;
+    showPreview(uploadedImageURL);
+    return;
+  }
+
+  const file = upload.files[0];
   if(!file) return alert("Select image first!");
 
   const form = new FormData();
-  form.append("file", file);
-  form.append("upload_preset", UPLOAD_PRESET);
+  form.append("file",file);
+  form.append("upload_preset",UPLOAD_PRESET);
 
   const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,{
     method:"POST",
@@ -84,13 +177,14 @@ async function uploadImage(){
   });
 
   const data = await res.json();
-
   uploadedImageURL = data.secure_url;
 
-  document.getElementById("preview").src = uploadedImageURL;
-  document.getElementById("preview").style.display="block";
+  showPreview(uploadedImageURL);
+}
 
-  alert("Image uploaded successfully!");
+function showPreview(url){
+  previewImg.src = url;
+  previewImg.style.display="block";
 }
 
 async function send(){
@@ -105,7 +199,7 @@ async function send(){
     })
   });
 
-  document.getElementById("done").innerText="Sent Successfully ✔";
+  done.innerText="Sent Successfully ✔";
 }
 </script>
 
